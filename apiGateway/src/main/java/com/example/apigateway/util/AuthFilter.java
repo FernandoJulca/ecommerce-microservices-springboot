@@ -1,5 +1,6 @@
 package com.example.apigateway.util;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,8 @@ public class AuthFilter implements GlobalFilter, Ordered {
     private JwtUtil jwtUtil;
 
     private static final List<String> PUBLIC_PATHS = List.of(
-            
+    		"/auth-service/auth/register",
+    	    "/auth-service/auth/login"
         );
 
     @Override
@@ -30,7 +32,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        ServerHttpRequest request = exchange.getRequest();
+    	ServerHttpRequest request = exchange.getRequest();
         String path = request.getPath().toString();
         String method = request.getMethod().toString();
         
@@ -42,23 +44,23 @@ public class AuthFilter implements GlobalFilter, Ordered {
         System.out.println("=================================================");
         
         if ("OPTIONS".equalsIgnoreCase(method)) {
-            System.out.println("Preflight OPTIONS - dejando pasar al CorsFilter");
             exchange.getResponse().setStatusCode(HttpStatus.OK);
             return exchange.getResponse().setComplete();
         }
-        
-        if (isPublicPath(path)) {
-            System.out.println("Ruta pública, dejando pasar sin validar JWT");
+
+        boolean isPublic = isPublicPath(path);
+        System.out.println(">>> isPublic resultado: " + isPublic);  // ← log clave
+
+        if (isPublic) {
+            System.out.println(">>> Dejando pasar ruta pública");
             return chain.filter(exchange);
         }
 
         String authHeader = request.getHeaders().getFirst("Authorization");
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("Token no encontrado o formato incorrecto");
             return onError(exchange, "No autorizado: falta token", HttpStatus.UNAUTHORIZED);
         }
-
         String token = authHeader.substring(7);
 
         if (token.isBlank()) {
@@ -89,8 +91,16 @@ public class AuthFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicPath(String path) {
-        return PUBLIC_PATHS.stream()
-                .anyMatch(publicPath -> path.startsWith(publicPath.replace("/**", "")));
+        System.out.println("Path bytes: " + Arrays.toString(path.getBytes()));
+        System.out.println("Expected bytes: " + Arrays.toString("/auth-service/auth/register".getBytes()));
+        System.out.println("¿Son iguales? " + path.equals("/auth-service/auth/register"));
+        
+        for (String publicPath : PUBLIC_PATHS) {
+            if (path.equals(publicPath) || path.startsWith(publicPath + "/")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
