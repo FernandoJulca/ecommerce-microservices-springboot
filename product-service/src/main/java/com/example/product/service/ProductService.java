@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.product.dto.ProductRequest;
 import com.example.product.dto.ProductResponse;
 import com.example.product.exception.CategoryNotFoundException;
+import com.example.product.exception.InsufficientStockException;
 import com.example.product.exception.ProductNotFoundException;
 import com.example.product.model.Category;
 import com.example.product.model.Product;
@@ -116,6 +117,19 @@ public class ProductService {
 
         _productRepository.save(product);
         log.info("Producto desactivado: {}", product.getName());
+    }
+    
+    public void reduceStock(Integer id, Integer quantity) {
+        Product product = _productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+        
+        if (product.getStock() < quantity) {
+            throw new InsufficientStockException(product.getName(), product.getStock());
+        }
+        
+        product.setStock(product.getStock() - quantity);
+        _productRepository.save(product);
+        log.info("Stock reducido para producto {}: -{}", id, quantity);
     }
 
     private ProductResponse toResponse(Product product) {

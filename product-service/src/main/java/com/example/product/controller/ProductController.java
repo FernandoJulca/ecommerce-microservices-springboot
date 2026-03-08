@@ -87,4 +87,12 @@ public class ProductController {
     public ResponseEntity<List<ProductResponse>> search(@RequestParam String name) {
         return ResponseEntity.ok(productService.search(name));
     }
+    
+    @PutMapping("/{id}/stock")
+    public ResponseEntity<Void> reduceStock(
+            @PathVariable Integer id,
+            @RequestParam Integer quantity) {
+        productService.reduceStock(id, quantity);
+        return ResponseEntity.noContent().build();
+    }
 }
