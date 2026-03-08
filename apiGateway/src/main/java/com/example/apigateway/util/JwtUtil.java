@@ -40,4 +40,13 @@ public class JwtUtil {
 
 		return claims.getSubject();
 	}
+	
+	public String obtenerRolDelToke(String token) {
+		Claims claims = Jwts.parserBuilder()
+				.setSigningKey(key)
+				.build()
+				.parseClaimsJws(token)
+				.getBody();
+		return claims.get("role", String.class);
+	}
 }

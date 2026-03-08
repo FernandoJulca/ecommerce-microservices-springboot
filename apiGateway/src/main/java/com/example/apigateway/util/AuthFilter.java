@@ -79,10 +79,12 @@ public class AuthFilter implements GlobalFilter, Ordered {
         }
 
         String username = jwtUtil.obtenerUsuarioAndToken(token);
+        String role = jwtUtil.obtenerRolDelToke(token);
         System.out.println("Token válido para usuario: " + username);
         
         ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
             .header("X-Username", username)
+            .header("X-Role", role)
             .build();
 
         System.out.println("Reenviando petición con header X-Username: " + username);
