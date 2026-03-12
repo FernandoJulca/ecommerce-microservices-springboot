@@ -72,12 +72,40 @@ public class AuthService {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(InvalidCredentialsException::new);
+        log.info("Usuario encontrado: {}", user.getEmail());
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        	log.info("Password incorrecto");
             throw new InvalidCredentialsException();
         }
 
         log.info("Login exitoso: {}", user.getEmail());
+
+        String token = jwtUtil.generateToken(user);
+        return AuthResponse.builder()
+                .token(token)
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
+    }
+    
+    
+    public AuthResponse registerAdmin(RegisterRequest request) {
+        log.info("Registrando nuevo admin: {}", request.getEmail());
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new EmailAlreadyExistsException(request.getEmail());
+        }
+
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.ADMIN)
+                .enabled(true)
+                .build();
+
+        userRepository.save(user);
+        log.info("Admin registrado exitosamente: {}", user.getEmail());
 
         String token = jwtUtil.generateToken(user);
         return AuthResponse.builder()

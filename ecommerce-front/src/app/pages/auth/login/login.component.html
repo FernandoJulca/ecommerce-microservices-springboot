@@ -1,0 +1,54 @@
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+  <div class="card shadow p-4" style="width: 100%; max-width: 420px;">
+
+    <!-- Header -->
+    <div class="text-center mb-4">
+      <h2 class="fw-bold">🛒 E-Commerce</h2>
+      <p class="text-muted">Inicia sesión en tu cuenta</p>
+    </div>
+
+    <!-- Error -->
+    <div class="alert alert-danger" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Formulario -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Email</label>
+      <input
+        type="email"
+        class="form-control"
+        placeholder="tucorreo@gmail.com"
+        [(ngModel)]="email"
+        (keyup.enter)="onLogin()">
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Contraseña</label>
+      <input
+        type="password"
+        class="form-control"
+        placeholder="Mínimo 8 caracteres"
+        [(ngModel)]="password"
+        (keyup.enter)="onLogin()">
+    </div>
+
+    <button
+      class="btn btn-primary w-100 py-2"
+      (click)="onLogin()"
+      [disabled]="loading">
+      <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+      {{ loading ? 'Iniciando sesión...' : 'Iniciar sesión' }}
+    </button>
+
+    <hr class="my-4">
+
+    <p class="text-center text-muted mb-0">
+      ¿No tienes cuenta?
+      <a routerLink="/register" class="text-primary fw-semibold">
+        Regístrate aquí
+      </a>
+    </p>
+
+  </div>
+</div>

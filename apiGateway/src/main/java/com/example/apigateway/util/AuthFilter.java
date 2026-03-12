@@ -22,7 +22,10 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
     private static final List<String> PUBLIC_PATHS = List.of(
     		"/auth-service/auth/register",
-    	    "/auth-service/auth/login"
+    	    "/auth-service/auth/login",
+    	    "/auth-service/auth/register-admin",
+    		"/product-service/products",
+    	    "/product-service/categories"
         );
 
     @Override

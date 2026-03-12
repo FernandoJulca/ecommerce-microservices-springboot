@@ -1,0 +1,72 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+  <a class="navbar-brand fw-bold" routerLink="/products">
+    🛒 E-Commerce
+  </a>
+
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navMenu">
+
+    <!-- Links izquierda -->
+    <ul class="navbar-nav me-auto">
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/products" routerLinkActive="active">
+          Productos
+        </a>
+      </li>
+      <li class="nav-item" *ngIf="isAdmin">
+        <a class="nav-link" routerLink="/admin/products" routerLinkActive="active">
+          Admin Productos
+        </a>
+      </li>
+      <li class="nav-item" *ngIf="isAdmin">
+        <a class="nav-link" routerLink="/admin/orders" routerLinkActive="active">
+          Admin Pedidos
+        </a>
+      </li>
+    </ul>
+
+    <!-- Links derecha -->
+    <ul class="navbar-nav ms-auto align-items-center gap-2">
+
+      <li class="nav-item" *ngIf="isLoggedIn">
+        <a class="nav-link position-relative" routerLink="/cart">
+          🛒
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                *ngIf="cartCount > 0">
+            {{ cartCount }}
+          </span>
+        </a>
+      </li>
+
+      <li class="nav-item" *ngIf="isLoggedIn">
+        <a class="nav-link" routerLink="/orders">Mis Pedidos</a>
+      </li>
+
+      <li class="nav-item" *ngIf="isLoggedIn">
+        <span class="nav-link text-secondary">{{ userEmail }}</span>
+      </li>
+
+      <li class="nav-item" *ngIf="isLoggedIn">
+        <button class="btn btn-outline-light btn-sm" (click)="logout()">
+          Cerrar sesión
+        </button>
+      </li>
+
+      <li class="nav-item" *ngIf="!isLoggedIn">
+        <a class="btn btn-outline-light btn-sm me-2" routerLink="/login">
+          Iniciar sesión
+        </a>
+      </li>
+
+      <li class="nav-item" *ngIf="!isLoggedIn">
+        <a class="btn btn-primary btn-sm" routerLink="/register">
+          Registrarse
+        </a>
+      </li>
+
+    </ul>
+  </div>
+</nav>

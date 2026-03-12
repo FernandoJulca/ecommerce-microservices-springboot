@@ -1,0 +1,109 @@
+<div class="container py-4">
+
+  <!-- Título -->
+  <h2 class="mb-4 fw-bold">🛍️ Productos</h2>
+
+  <!-- Filtros -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Buscar productos..."
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="onSearch()">
+        <button class="btn btn-primary" (click)="onSearch()">
+          🔍 Buscar
+        </button>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <select class="form-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
+        <option [ngValue]="null">Todas las categorías</option>
+        <option *ngFor="let cat of categories" [ngValue]="cat.id">
+          {{ cat.name }}
+        </option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <button class="btn btn-outline-secondary w-100" (click)="clearFilters()">
+        Limpiar
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="text-center py-5" *ngIf="loading">
+    <div class="spinner-border text-primary"></div>
+    <p class="mt-2">Cargando productos...</p>
+  </div>
+
+  <!-- Sin resultados -->
+  <div class="text-center py-5" *ngIf="!loading && products.length === 0">
+    <h5 class="text-muted">No se encontraron productos</h5>
+    <button class="btn btn-primary mt-2" (click)="clearFilters()">
+      Ver todos los productos
+    </button>
+  </div>
+
+  <!-- Grid de productos -->
+  <div class="row g-4" *ngIf="!loading && products.length > 0">
+    <div class="col-md-4 col-sm-6" *ngFor="let product of products">
+      <div class="card h-100 shadow-sm">
+
+        <!-- Imagen -->
+        <img
+          [src]="product.imageUrl || 'assets/no-image.png'"
+          class="card-img-top"
+          style="height: 200px; object-fit: cover;"
+          [alt]="product.name">
+
+        <div class="card-body d-flex flex-column">
+          <!-- Categoría -->
+          <span class="badge bg-secondary mb-2" style="width: fit-content;">
+            {{ product.categoryName }}
+          </span>
+
+          <!-- Nombre -->
+          <h5 class="card-title">{{ product.name }}</h5>
+
+          <!-- Descripción -->
+          <p class="card-text text-muted small flex-grow-1">
+            {{ product.description }}
+          </p>
+
+          <!-- Precio y stock -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="fs-5 fw-bold text-primary">
+              S/ {{ product.price | number:'1.2-2' }}
+            </span>
+            <span class="text-muted small">
+              Stock: {{ product.stock }}
+            </span>
+          </div>
+
+          <!-- Botones -->
+          <div class="d-flex gap-2">
+            <a [routerLink]="['/products', product.id]"
+               class="btn btn-outline-primary btn-sm flex-grow-1">
+              Ver detalle
+            </a>
+            <button
+              class="btn btn-primary btn-sm flex-grow-1"
+              (click)="addToCart(product)"
+              [disabled]="product.stock === 0 || addingToCart === product.id">
+              <span *ngIf="addingToCart === product.id"
+                    class="spinner-border spinner-border-sm me-1">
+              </span>
+              {{ product.stock === 0 ? 'Sin stock' : '🛒 Agregar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
