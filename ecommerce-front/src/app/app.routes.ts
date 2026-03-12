@@ -66,14 +66,6 @@ export const routes: Routes = [
         (m) => m.ProductManagementComponent,
       ),
   },
-  {
-    path: 'admin/orders',
-    canActivate: [AuthGuard, AdminGuard],
-    loadComponent: () =>
-      import('./pages/admin/order-management/order-management.component').then(
-        (m) => m.OrderManagementComponent,
-      ),
-  },
 
   { path: '**', redirectTo: '/products' },
 ];

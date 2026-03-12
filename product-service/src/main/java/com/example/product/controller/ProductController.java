@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -65,6 +66,25 @@ public class ProductController {
         }
         productService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping("/admin")
+    public ResponseEntity<List<ProductResponse>> getAllAdmin(
+            @RequestHeader("X-Role") String role) {
+        if (!role.equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(productService.getAllAdmin());
+    }
+
+    @PatchMapping("/{id}/toggle-active")
+    public ResponseEntity<ProductResponse> toggleActive(
+            @RequestHeader("X-Role") String role,
+            @PathVariable Integer id) {
+        if (!role.equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(productService.toggleActive(id));
     }
 
     // ── PÚBLICO ────────────────────────────────────────

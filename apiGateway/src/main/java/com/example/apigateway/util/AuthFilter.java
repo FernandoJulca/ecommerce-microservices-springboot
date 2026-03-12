@@ -18,102 +18,111 @@ import reactor.core.publisher.Mono;
 public class AuthFilter implements GlobalFilter, Ordered {
 
 	@Autowired
-    private JwtUtil jwtUtil;
+	private JwtUtil jwtUtil;
 
-    private static final List<String> PUBLIC_PATHS = List.of(
-    		"/auth-service/auth/register",
-    	    "/auth-service/auth/login",
-    	    "/auth-service/auth/register-admin",
-    		"/product-service/products",
-    	    "/product-service/categories"
-        );
+	@Override
+	public int getOrder() {
+		return 1;
+	}
 
-    @Override
-    public int getOrder() {
-        return 1; 
-    }
+	@Override
+	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+		ServerHttpRequest request = exchange.getRequest();
+		String path = request.getPath().toString();
+		String method = request.getMethod().toString();
 
-    @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-    	ServerHttpRequest request = exchange.getRequest();
-        String path = request.getPath().toString();
-        String method = request.getMethod().toString();
-        
-        System.out.println("=================================================");
-        System.out.println("GATEWAY RECIBIÓ PETICIÓN");
-        System.out.println("Path: " + path);
-        System.out.println("Método: " + method);
-        System.out.println("Origin: " + request.getHeaders().getFirst("Origin"));
-        System.out.println("=================================================");
-        
-        if ("OPTIONS".equalsIgnoreCase(method)) {
-            exchange.getResponse().setStatusCode(HttpStatus.OK);
-            return exchange.getResponse().setComplete();
-        }
+		System.out.println("=================================================");
+		System.out.println("GATEWAY RECIBIÓ PETICIÓN");
+		System.out.println("Path: " + path);
+		System.out.println("Método: " + method);
+		System.out.println("Origin: " + request.getHeaders().getFirst("Origin"));
+		System.out.println("=================================================");
 
-        boolean isPublic = isPublicPath(path);
-        System.out.println(">>> isPublic resultado: " + isPublic);  // ← log clave
+		if ("OPTIONS".equalsIgnoreCase(method)) {
+			exchange.getResponse().setStatusCode(HttpStatus.OK);
+			return exchange.getResponse().setComplete();
+		}
 
-        if (isPublic) {
-            System.out.println(">>> Dejando pasar ruta pública");
-            return chain.filter(exchange);
-        }
+		boolean isPublic = isPublicPath(request);
+		System.out.println(">>> isPublic resultado: " + isPublic); // ← log clave
 
-        String authHeader = request.getHeaders().getFirst("Authorization");
-        
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return onError(exchange, "No autorizado: falta token", HttpStatus.UNAUTHORIZED);
-        }
-        String token = authHeader.substring(7);
+		if (isPublic) {
+			System.out.println(">>> Dejando pasar ruta pública");
+			return chain.filter(exchange);
+		}
 
-        if (token.isBlank()) {
-            System.out.println("Token vacío");
-            return onError(exchange, "Token JWT no proporcionado", HttpStatus.UNAUTHORIZED);
-        }
+		String authHeader = request.getHeaders().getFirst("Authorization");
 
-        try {
-            if (!jwtUtil.validarToken(token)) {
-                System.out.println("Token inválido");
-                return onError(exchange, "Token JWT inválido o expirado", HttpStatus.UNAUTHORIZED);
-            }
-        } catch (Exception e) {
-            System.out.println("Error validando token: " + e.getMessage());
-            return onError(exchange, "Token JWT inválido o mal formado", HttpStatus.UNAUTHORIZED);
-        }
+		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+			return onError(exchange, "No autorizado: falta token", HttpStatus.UNAUTHORIZED);
+		}
+		String token = authHeader.substring(7);
 
-        String username = jwtUtil.obtenerUsuarioAndToken(token);
-        String role = jwtUtil.obtenerRolDelToke(token);
-        System.out.println("Token válido para usuario: " + username);
-        
-        ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-            .header("X-Username", username)
-            .header("X-Role", role)
-            .build();
+		if (token.isBlank()) {
+			System.out.println("Token vacío");
+			return onError(exchange, "Token JWT no proporcionado", HttpStatus.UNAUTHORIZED);
+		}
 
-        System.out.println("Reenviando petición con header X-Username: " + username);
+		try {
+			if (!jwtUtil.validarToken(token)) {
+				System.out.println("Token inválido");
+				return onError(exchange, "Token JWT inválido o expirado", HttpStatus.UNAUTHORIZED);
+			}
+		} catch (Exception e) {
+			System.out.println("Error validando token: " + e.getMessage());
+			return onError(exchange, "Token JWT inválido o mal formado", HttpStatus.UNAUTHORIZED);
+		}
 
-        return chain.filter(exchange.mutate().request(modifiedRequest).build());
-    }
+		String username = jwtUtil.obtenerUsuarioAndToken(token);
+		String role = jwtUtil.obtenerRolDelToke(token);
+		System.out.println("Token válido para usuario: " + username);
+		System.out.println("Role extraído: " + role);
 
-    private boolean isPublicPath(String path) {
-        System.out.println("Path bytes: " + Arrays.toString(path.getBytes()));
-        System.out.println("Expected bytes: " + Arrays.toString("/auth-service/auth/register".getBytes()));
-        System.out.println("¿Son iguales? " + path.equals("/auth-service/auth/register"));
-        
-        for (String publicPath : PUBLIC_PATHS) {
-            if (path.equals(publicPath) || path.startsWith(publicPath + "/")) {
-                return true;
-            }
-        }
-        return false;
-    }
+		ServerHttpRequest modifiedRequest = exchange.getRequest().mutate().header("X-Username", username)
+				.header("X-Role", role).build();
 
-    private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
-        exchange.getResponse().setStatusCode(status);
-        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
-        String errorJson = String.format("{\"error\": \"%s\"}", message);
-        return exchange.getResponse().writeWith(
-            Mono.just(exchange.getResponse().bufferFactory().wrap(errorJson.getBytes()))
-        );
-    }
+		System.out.println("Reenviando petición con header X-Username: " + username);
+
+		return chain.filter(exchange.mutate().request(modifiedRequest).build());
+	}
+
+	private boolean isPublicPath(ServerHttpRequest request) {
+	    String path = request.getPath().toString();
+	    String method = request.getMethod().toString();
+
+	    // Rutas 100% públicas sin importar el método
+	    List<String> alwaysPublic = List.of(
+	        "/auth-service/auth/register",
+	        "/auth-service/auth/login",
+	        "/auth-service/auth/register-admin"
+	    );
+
+	    for (String publicPath : alwaysPublic) {
+	        if (path.equals(publicPath)) return true;
+	    }
+
+	    // Productos y categorías solo son públicos en GET
+	    if ("GET".equalsIgnoreCase(method)) {
+	    	if (path.equals("/product-service/products/admin")) {
+	            return false; // ← esta ruta NO es pública aunque sea GET
+	        }
+	    	
+	        if (path.equals("/product-service/products") ||
+	            path.startsWith("/product-service/products/") ||
+	            path.equals("/product-service/categories") ||
+	            path.startsWith("/product-service/categories/")) {
+	            return true;
+	        }
+	    }
+
+	    return false;
+	}
+
+	private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
+		exchange.getResponse().setStatusCode(status);
+		exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+		String errorJson = String.format("{\"error\": \"%s\"}", message);
+		return exchange.getResponse()
+				.writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(errorJson.getBytes())));
+	}
 }

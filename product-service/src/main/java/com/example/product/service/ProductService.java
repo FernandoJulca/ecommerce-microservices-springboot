@@ -119,6 +119,22 @@ public class ProductService {
         log.info("Producto desactivado: {}", product.getName());
     }
     
+    public List<ProductResponse> getAllAdmin() {
+        return _productRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public ProductResponse toggleActive(Integer id) {
+        Product product = _productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+        product.setActive(!product.isActive());
+        _productRepository.save(product);
+        log.info("Producto {} estado cambiado a: {}", id, product.isActive());
+        return toResponse(product);
+    }
+    
     public void reduceStock(Integer id, Integer quantity) {
         Product product = _productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));

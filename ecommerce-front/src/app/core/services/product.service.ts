@@ -6,7 +6,6 @@ import { environment } from '../../../enviroments/enviroment';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
-
   private apiUrl = `${environment.apiUrl}/product-service`;
 
   constructor(private http: HttpClient) {}
@@ -20,11 +19,15 @@ export class ProductService {
   }
 
   search(name: string): Observable<Product[]> {
-    return this.http.get<Product[]>(`${this.apiUrl}/products/search?name=${name}`);
+    return this.http.get<Product[]>(
+      `${this.apiUrl}/products/search?name=${name}`,
+    );
   }
 
   getByCategory(categoryId: number): Observable<Product[]> {
-    return this.http.get<Product[]>(`${this.apiUrl}/products/category/${categoryId}`);
+    return this.http.get<Product[]>(
+      `${this.apiUrl}/products/category/${categoryId}`,
+    );
   }
 
   getCategories(): Observable<Category[]> {
@@ -42,5 +45,16 @@ export class ProductService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/products/${id}`);
+  }
+
+  getAllAdmin(): Observable<Product[]> {
+    return this.http.get<Product[]>(`${this.apiUrl}/products/admin`);
+  }
+
+  toggleActive(id: number): Observable<Product> {
+    return this.http.patch<Product>(
+      `${this.apiUrl}/products/${id}/toggle-active`,
+      {},
+    );
   }
 }

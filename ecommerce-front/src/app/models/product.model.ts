@@ -5,6 +5,7 @@ export interface Product {
   price: number;
   stock: number;
   imageUrl: string;
+  categoryId: number;
   categoryName: string;
   active: boolean;
 }
