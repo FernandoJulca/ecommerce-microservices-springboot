@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/auth/register",
                     "/auth/login",
+                    "/auth/register-admin",
                     "/v3/api-docs/**"
                 ).permitAll()
                 .anyRequest().authenticated()
